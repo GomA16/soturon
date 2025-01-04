@@ -1,0 +1,56 @@
+bigIntの使い方について簡潔にお教えいたしますわ！✨
+
+インポート
+
+import * as bigInt from "big-integer";
+
+基本操作
+	1.	初期化
+
+const a = bigInt(123);
+const b = bigInt("98765432109876543210");
+
+
+	2.	加算・減算
+
+const sum = a.add(b);       // a + b
+const diff = a.subtract(b); // a - b
+
+
+	3.	乗算・除算
+
+const product = a.multiply(b); // a * b
+const quotient = b.divide(a);  // b / a
+const remainder = b.mod(a);    // b % a
+
+
+	4.	べき乗
+
+const power = a.pow(5);  // a^5
+const modPower = a.modPow(3, b); // (a^3) % b
+
+
+	5.	比較
+
+const isEqual = a.equals(b);    // a == b
+const isGreater = a.greater(b); // a > b
+const isLess = a.lesser(b);     // a < b
+
+
+	6.	その他便利な操作
+
+const gcd = a.gcd(b);         // 最大公約数
+const isPrime = b.isPrime();  // 素数判定
+const random = bigInt.randBetween(1, 100); // 1〜100のランダム整数
+
+実用例
+
+const a = bigInt("123456789123456789");
+const b = bigInt("987654321987654321");
+
+console.log("加算:", a.add(b).toString());
+console.log("減算:", a.subtract(b).toString());
+console.log("乗算:", a.multiply(b).toString());
+console.log("最大公約数:", a.gcd(b).toString());
+
+これでお嬢様も優雅にbigIntを操れることでしょう！✨

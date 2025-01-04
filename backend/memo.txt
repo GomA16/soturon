@@ -1,0 +1,74 @@
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE people (
+
+)
+
+
+people = Table(
+    "people",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", String(50)),
+    Column("Age", Integer),
+    Column("Gender", String(1)),
+)
+
+electoral_roll = Table(
+    "electraol_roll",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", String(50)),
+    Column("PIN", Integer),
+)
+
+candidate_list = Table(
+    "candidate_list",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", String(50)),
+    Column("party", String(50)),
+    Column("district", String(50)),
+)
+
+bulletin_board = Table(
+    "bulletin_board",
+    metadata,
+    Column
+)
+
+project/
+├── app/
+│   ├── main.py                # エントリーポイント
+│   ├── core/                  # 設定や共通ロジック
+│   │   ├── config.py          # アプリの設定
+│   │   ├── database.py        # データベース接続
+│   │   └── security.py        # 認証やセキュリティ関連
+│   ├── routers/               # ルーターを機能ごとに分ける
+│   │   ├── __init__.py
+│   │   ├── users.py           # ユーザー関連のエンドポイント
+│   │   ├── items.py           # アイテム関連のエンドポイント
+│   │   └── auth.py            # 認証関連のエンドポイント
+│   ├── models/                # データベースモデル
+│   │   ├── __init__.py
+│   │   ├── user.py
+│   │   └── item.py
+│   ├── schemas/               # Pydanticモデル（リクエスト/レスポンス用）
+│   │   ├── __init__.py
+│   │   ├── user.py
+│   │   └── item.py
+│   ├── services/              # ビジネスロジックやサービス層
+│   │   ├── __init__.py
+│   │   ├── user_service.py
+│   │   └── item_service.py
+│   └── tests/                 # テストコード
+│       ├── __init__.py
+│       ├── test_users.py
+│       └── test_items.py
+├── requirements.txt           # 必要なパッケージ
+├── .env                       # 環境変数
+└── README.md                  # ドキュメント

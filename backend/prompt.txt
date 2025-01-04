@@ -1,0 +1,7 @@
+CREATE TABLE electoral_roll (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    Age INTEGER NOT NULL,
+    Gender CHAR(1) CHECK (Gender IN ('M', 'F')),
+    PINcode VARCHAR(10) NOT NULL
+);
