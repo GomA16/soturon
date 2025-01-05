@@ -19,7 +19,7 @@ class Permutation():
         self.permutation = res
         self.matrix = [[0] * n for _ in range(n)]
         for i in range(n):
-            self.matrix[array[i]][res[i]] = 1
+            self.matrix[i][res[i]] = 1
 
     def doPermutation(self, data: list[int]) -> list[int]:
         res= [0 for _ in range(len(data))]
@@ -59,10 +59,14 @@ class ShuffleProof():
         res = []
         hash = Hash()
         hash.recHash(vec)
+        # if num == 1:
+        #     print("vec", vec)
+        #     print("hash.h",hash.h)
         for i in range(1,num+1):
             ihash = Hash()
             ihash.recHash(i)
             chash = Hash()
+            # print("ihash", ihash.h)
             chash.recHash([hash.h, ihash.h])
             # print(type(chash.h))
             chash.toInt(params)
@@ -74,7 +78,9 @@ class ShuffleProof():
         u_childas = 1
         c_hats_prime = [params.h]
         r_hats = []
+        # print("vec", len(vec))
         for item in vec:
+            # print("iterated")
             r_hat_i = getRandomElement(params.q)
             r_hats.append(r_hat_i)
             r_hat = (r_hat_i  + (item * r_hat) % params.q) % params.q
@@ -99,8 +105,10 @@ class ShuffleProof():
         us = self.getChallenges(params, num, vec)
 
         u_childas = self.phai.doPermutation(us)
+        # print("uchila" ,len(u_childas))
 
         com_prime = self.genCommitmentChain(params,u_childas)
+        # print("com prime", len(com_prime))
 
         w1 = getRandomElement(params.q)
         w2 = getRandomElement(params.q)
@@ -168,10 +176,78 @@ class ShuffleProof():
             s_childas.append((w_childas[i] - (c * u_childas[i])%params.q)%params.q)
         
         s = [s1, s2, s3, s4, s_hats, s_childas]
-        self.pi = [c,s,[c_vec.commitment for c_vec in com.matCommitment], [item[0] for item in com_prime]]
+        self.pi = [c,s,[c_vec.commitment for c_vec in com.matCommitment], [item for item in com_prime[0]]]
         return self
     
-    # def verify(self) -> bool:
+    def verify(self, params: Parameters) -> bool:
+        c = self.pi[0]
+        s = self.pi[1]
+        cs = self.pi[2]
+        chatprime = self.pi[3]
+        # print("len", len(chatprime))
+        num = len(self.votes)
+        hs =  Pedersen().getHs(params, num)
+
+        vec = []
+        for item in self.votes:
+            vec.append(item)
+        for item in self.shuffled_votes:
+            vec.append(item)
+        for item in self.pi[2]:
+            vec.append(item)
+        us = self.getChallenges(params, num, vec)
+
+        numer = 1
+        denom = 1
+        for i in range(num):
+            numer = (numer * cs[i]) % params.p
+            denom = (denom * hs[i]) % params.p 
+        c_bar = (numer * modinv(denom, params.p)) % params.p
+
+        u = 1
+        for item in us:
+            u = (u * item) % params.q
+
+        # print(len(chatprime))
+        chat = (chatprime[num] * modinv(modPow(params.h, u, params.p), params.p)) % params.p
+
+        cchilda = 1
+        for i in range(num):
+            cchilda = (cchilda * modPow(cs[i], us[i], params.p)) % params.p
+        
+        t1 = (modPow(c_bar, c, params.p) * modPow(params.g, s[0], params.p)) % params.p
+        t2 = (modPow(chat, c, params.p) * modPow(params.g, s[1], params.p)) % params.p
+        t3 = (modPow(cchilda, c, params.p) * modPow(params.g, s[2], params.p)) % params.p
+        for i in range(num):
+            t3 = (t3 * modPow(hs[i], s[5][i], params.p)) % params.p
+
+        a = 1
+        b = 1
+        for i in range(num):
+            a = (a * modPow(self.votes[i].cipherText[1], us[i], params.p)) % params.p
+            b = (b * modPow(self.votes[i].cipherText[0], us[i], params.p)) % params.p
+
+        t41 = (modPow(a, c, params.p) * modPow(self.pk, modinv(s[3], params.p), params.p)) % params.p
+        t42 = (modPow(b, c, params.p) * modPow(params.g, modinv(s[3], params.p), params.p)) % params.p
+        for i in range(num):
+            t41 = (t41 * modPow(self.shuffled_votes[i].cipherText[1], s[5][i], params.p)) % params.p
+            t42 = (t42 * modPow(self.shuffled_votes[i].cipherText[0], s[5][i], params.p)) % params.p
+        
+        thats = []
+        for i in range(num):
+            thats.append((
+                modPow(chatprime[i+1], c, params.p)
+                *(
+                    modPow(params.g, s[4][i], params.p)
+                    *modPow(chatprime[i], s[5][i], params.p)
+                )%params.p
+            )%params.p)
+        t = (t1,t2,t3,[t41,t42], thats)
+        y = [self.votes, self.shuffled_votes, c, chatprime, self.pk]
+        cprime = self.getChallenges(params, 1, [y,t])
+        print("c", c)
+        print("cprim", cprime)
+        return c == cprime[0]
 
     def __str__(self):
         return f'{self.votes}\n{self.shuffled_votes}\n{self.reEncRs}\n{self.phai}\n{self.pi}\n{self.pk}'

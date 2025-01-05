@@ -26,7 +26,7 @@ def test3():
     # print(st_keys)
     keys.setKeys(st_keys)
     votes = []
-    for i in range(1,6):
+    for i in range(1,5):
         plain = ElgamalPlainText(i*100+i*10+i)
         tmp = ElgamalCipherText()
         tmp.encryption(param, keys, plain)
@@ -34,11 +34,27 @@ def test3():
     phai = Permutation()
     phai.genPermutation(len(votes))
     shuffled = phai.cipherPermutation(param, keys, votes)
+    dumyplain = ElgamalPlainText(666)
+    dumy = ElgamalCipherText()
+    dumy.encryption(param, keys, dumyplain)
+    dumy.reEncR = 11111
+    print(phai.permutation)
+    print(phai.matrix)
+    
     sp = ShuffleProof()
+    # shuffled[len(shuffled)-1] = dumy
+    print("votes")
+    for item in votes:
+        print(item.decryption(param, keys))
+    print("shuffle")
+    for item in shuffled:
+        print(item.decryption(param, keys))
     sp.setVariables(votes, shuffled, phai, keys)
     # print(sp)
     sp.genProof(param)
-    print(sp.pi)
+    # for item in sp.pi:
+    #     print(item)
+    print(sp.verify(param))
 
 def test2():
     mes = [[1,0,0],
@@ -51,12 +67,7 @@ def test2():
         print(item.commitment)
 
 def test1():
-    par = Parameters()
-    par.genParams(512)
-    print(par)
-    keys = ElgamalKeys()
-    keys.genKeys(par)
-    print(keys)
+    hash = Hash()
  
 def main():
     # print(test1())

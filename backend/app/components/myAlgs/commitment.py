@@ -1,4 +1,3 @@
-import sympy.ntheory.residue_ntheory
 from .myPrimitives import *
 from .parameters import Parameters
 from typing import Self
@@ -21,7 +20,7 @@ class Pedersen():
         self.matrix = mat
         return self
     
-    def _getHs(self, params: Parameters, length: int) -> list[int]:
+    def getHs(self, params: Parameters, length: int) -> list[int]:
         res = []
         for _ in range(length):
             while True:
@@ -36,7 +35,7 @@ class Pedersen():
 
 
     def commit(self, params: Parameters) -> Self:
-        self.hs = self._getHs(params, len(self.messages))
+        self.hs = self.getHs(params, len(self.messages))
         self.r = getRandomElement(params.q)
         self.commitment = modPow(params.g, self.r, params.q)
         for h,m in zip(self.hs, self.messages):
