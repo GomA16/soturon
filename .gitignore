@@ -3,5 +3,7 @@ tally-server
 venv
 backend/sandbox.py
 backend/helios_auth
-backend/app/randbelow/sandbox.py
+backend/app/routers/sandbox.py
+backend/app/routers/sandbox.ipynb
 next-front/node_modules
+next-front/.next
