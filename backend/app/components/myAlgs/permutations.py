@@ -41,6 +41,7 @@ class ShuffleProof():
         self.reEncRs: list[int] = None
         self.phai: Permutation = None
         self.pk: int = None
+
         self.pi: int = None
 
     def setVariables(self, votes: list[ElgamalCipherText], shuffled_votes: list[ElgamalCipherText], 
@@ -84,17 +85,20 @@ class ShuffleProof():
             r_hat_i = getRandomElement(params.q)
             r_hats.append(r_hat_i)
             r_hat = (r_hat_i  + (item * r_hat) % params.q) % params.q
-            u_childas = (item * u_childas) % params.p
+            u_childas = (item * u_childas) % params.q
             c_hats_prime.append((modPow(params.g, r_hat, params.p) * modPow(params.h, u_childas, params.p)) % params.p)
         return [c_hats_prime, r_hats]
         
 
-    def genProof(self, params: Parameters) -> Self:
-        com = Pedersen()
-        com.setMatrix(self.phai.matrix)
-        com.commitMat(params)
-
+    def genProof(self, params: Parameters) -> Self:        
         num = len(self.votes)
+        com = Pedersen()
+        hs = com.getHs(params, num)
+        # print("hs\n", hs)
+        com.setMatrix(self.phai.matrix)
+        com.commitMat(params, hs)
+
+
         vec = []
         for item in self.votes:
             vec.append(item)
@@ -103,6 +107,8 @@ class ShuffleProof():
         for item in com.matCommitment:
             vec.append(item.commitment)
         us = self.getChallenges(params, num, vec)
+
+        # print("us\n", us)
 
         u_childas = self.phai.doPermutation(us)
         # print("uchila" ,len(u_childas))
@@ -118,14 +124,14 @@ class ShuffleProof():
         w_hats = []
         w_childas = []
         for _ in range(len(self.votes)):
-            tmp = getRandomElement(params.q)
-            w_hats.append(tmp)
-            tmp = getRandomElement(params.q)
-            w_childas.append(tmp)
+            w_hats.append(getRandomElement(params.q))
+            w_childas.append(getRandomElement(params.q))
 
         t1 = modPow(params.g, w1, params.p)
         t2 = modPow(params.g, w2, params.p)
         t3 = modPow(params.g, w3, params.p)
+        for i in range(num):
+            t3 = (t3 * modPow(hs[i],w_childas[i],params.p)) % params.p
         t41 = modPow(self.pk, modinv(w4, params.p), params.p)
         t42 = modPow(params.g, modinv(w4, params.p), params.p)
         for w_childa, cipher in zip(w_childas, self.shuffled_votes):
@@ -134,11 +140,19 @@ class ShuffleProof():
 
         t_hats = []
         for i in range(len(self.votes)):
-            t_hats.append((modPow(params.g, w_hats[i], params.p) * modPow(com_prime[0][i], w_hats[i], params.p)) % params.p)
+            t_hats.append((modPow(params.g, w_hats[i], params.p) * modPow(com_prime[0][i], w_childas[i], params.p)) % params.p)
         
         t = [t1, t2, t3, [t41, t42], t_hats]
+        print("t")
+        for item in t:
+            print(item)
+        print()
 
         y = [self.votes, self.shuffled_votes, [c.commitment for c in com.matCommitment], com_prime[0], self.pk]
+        # print("y\n")
+        # for item in y:
+        #     print(item)
+        # print()
 
         c = self.getChallenges(params, 1, [y, t])[0]
 
@@ -147,16 +161,15 @@ class ShuffleProof():
             r_bar = (r_bar + comi.r) %params.q
         s1 = (w1 - (c * r_bar) % params.q) % params.q
 
-        n = len(self.votes)
-        vs = [0 for _ in range(n)]
+        vs = [0 for _ in range(num)]
         if len(self.votes) != 0:
-            vs[n-1] = 1
-            for i in range(n-2, 0, -1):
+            vs[num-1] = 1
+            for i in range(num-2, 0, -1):
                 vs[i] = (u_childas[i+1] * vs[i+1]) % params.q
 
         r_hat = 0
-        for ri, v in zip(com_prime, vs):
-            r_hat = (r_hat + (ri[1] * v) % params.q) % params.q
+        for ri, v in zip(com_prime[1], vs):
+            r_hat = (r_hat + (ri * v) % params.q) % params.q
         s2 = (w2 - (c * r_hat)%params.q) % params.q
 
         r = 0
@@ -171,22 +184,24 @@ class ShuffleProof():
 
         s_hats = []
         s_childas = []
-        for i in range(n):
+        for i in range(num):
             s_hats.append((w_hats[i] - (c * com_prime[1][i])%params.q)%params.q)
             s_childas.append((w_childas[i] - (c * u_childas[i])%params.q)%params.q)
         
         s = [s1, s2, s3, s4, s_hats, s_childas]
-        self.pi = [c,s,[c_vec.commitment for c_vec in com.matCommitment], [item for item in com_prime[0]]]
+        self.pi = [c,s,[c_vec.commitment for c_vec in com.matCommitment], [item for item in com_prime[0]], hs]
         return self
     
     def verify(self, params: Parameters) -> bool:
+        print("\n---verify---")
         c = self.pi[0]
         s = self.pi[1]
         cs = self.pi[2]
         chatprime = self.pi[3]
+        hs = self.pi[4]
+        # print("hs\n", hs)
         # print("len", len(chatprime))
         num = len(self.votes)
-        hs =  Pedersen().getHs(params, num)
 
         vec = []
         for item in self.votes:
@@ -196,6 +211,7 @@ class ShuffleProof():
         for item in self.pi[2]:
             vec.append(item)
         us = self.getChallenges(params, num, vec)
+        # print("us\n", us)
 
         numer = 1
         denom = 1
@@ -242,11 +258,20 @@ class ShuffleProof():
                     *modPow(chatprime[i], s[5][i], params.p)
                 )%params.p
             )%params.p)
-        t = (t1,t2,t3,[t41,t42], thats)
-        y = [self.votes, self.shuffled_votes, c, chatprime, self.pk]
+
+        t = [t1,t2,t3,[t41,t42], thats]
+        print("t")
+        for item in t:
+            print(item)
+        print()
+        y = [self.votes, self.shuffled_votes, cs, chatprime, self.pk]
+        # print("y\n")
+        # for item in y:
+        #     print(item)
+        # print()
         cprime = self.getChallenges(params, 1, [y,t])
-        print("c", c)
-        print("cprim", cprime)
+        print("c\n", c)
+        print("cprim\n", cprime)
         return c == cprime[0]
 
     def __str__(self):

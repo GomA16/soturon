@@ -34,21 +34,22 @@ class Pedersen():
         return res
 
 
-    def commit(self, params: Parameters) -> Self:
-        self.hs = self.getHs(params, len(self.messages))
+    def commit(self, params: Parameters, hs: list[int]) -> Self:
+        self.hs = hs
         self.r = getRandomElement(params.q)
         self.commitment = modPow(params.g, self.r, params.q)
         for h,m in zip(self.hs, self.messages):
-            self.commitment = (self.commitment * modPow(h, m, params.q)) % params.q
+            self.commitment = (self.commitment * modPow(h, m, params.p)) % params.p
         return self
     
-    def commitMat(self, params: Parameters) -> Self:
+    def commitMat(self, params: Parameters, hs: list[int]) -> Self:
+        self.hs = hs
         self.matCommitment = []
         for i in range(len(self.matrix)):
             column = [row[i] for row in self.matrix]
             child = Pedersen()
             child.setMessages(column)
-            child.commit(params)
+            child.commit(params, hs)
             self.matCommitment.append(child)
         return self 
     
