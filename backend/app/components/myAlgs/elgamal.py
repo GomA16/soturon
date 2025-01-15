@@ -5,7 +5,7 @@ from typing import Self
 def stringToInt(str):
     return int.from_bytes(str.encode('utf-8'), byteorder='big')
 
-def intToString(num):
+def intToString(num: int):
     return (num.to_bytes((num.bit_length() + 7) // 8, byteorder='big')).decode('utf-8')
     
 
@@ -15,8 +15,8 @@ class ElgamalKeys():
         self.secretKey = None
 
     def genKeys(self, params: Parameters) -> Self:
-        self.secretKey = getRandomElement(params.q)
-        self.publicKey = modPow(params.g, self.secretKey, params.q)
+        self.secretKey = getRandomElement(params.p)
+        self.publicKey = modPow(params.g, self.secretKey, params.p)
         return self
 
     def setKeys(self, keys: dict) -> Self:
@@ -29,7 +29,7 @@ class ElgamalKeys():
     
     
 class ElgamalPlainText():
-    def __init__(self, message):
+    def __init__(self, message: int):
         self.plainText:int = message
     
     def __str__(self):
@@ -46,17 +46,17 @@ class ElgamalCipherText():
         return self
     
     def encryption(self, params:Parameters, keys: ElgamalKeys, plainText:ElgamalPlainText) -> Self:
-        r = getRandomElement(params.q)
-        self.cipherText = (modPow(params.g, r, params.q), (plainText.plainText*modPow(keys.publicKey, r, params.q)) % params.q)
+        r = getRandomElement(params.p)
+        self.cipherText = (modPow(params.g, r, params.p), (plainText.plainText*modPow(keys.publicKey, r, params.p)) % params.p)
         return self
 
     def decryption(self, params: Parameters, keys: ElgamalKeys) -> ElgamalPlainText:
-        return ElgamalPlainText(self.cipherText[1] * modinv(modPow(self.cipherText[0], keys.secretKey, params.q), params.q )%params.q)
+        return ElgamalPlainText(self.cipherText[1] * modinv(modPow(self.cipherText[0], keys.secretKey, params.p), params.p )%params.p)
     
     def reEncryption(self, params: Parameters, keys: ElgamalKeys) -> Self:
-        r = getRandomElement(params.q)
+        r = getRandomElement(params.p)
         self.reEncR = r
-        self.cipherText = ((self.cipherText[0]*modPow(params.g, r, params.q)) % params.q, (self.cipherText[1]* modPow(keys.publicKey, r, params.q)) % params.q)
+        self.cipherText = ((self.cipherText[0]*modPow(params.g, r, params.p)) % params.p, (self.cipherText[1]* modPow(keys.publicKey, r, params.p)) % params.p)
         return self
     
     def __str__(self):

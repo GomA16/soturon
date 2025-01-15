@@ -86,6 +86,7 @@ class ShuffleProof():
             r_hats.append(r_hat_i)
             r_hat = (r_hat_i  + (item * r_hat) % params.q) % params.q
             u_childas = (item * u_childas) % params.q
+            # print(f'{type(params.h)} {type(u_childas)}')
             c_hats_prime.append((modPow(params.g, r_hat, params.p) * modPow(params.h, u_childas, params.p)) % params.p)
         return [c_hats_prime, r_hats]
         

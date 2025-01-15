@@ -27,7 +27,7 @@ SIGNATURE = "MD0CHQDm4V8xbAdeWPSvAoaD1ot5Ox+DoE402vfEPy6EAhxJlYsIxoD/uXLeLhxNofz
 params = Parameters()
 params.setParams(vars["parameters"])
 keys = ElgamalKeys()
-keys.setKeys(vars["keys"])
+keys.setKeys(vars["tallyKeys"])
 
 class Data(BaseModel):
     message: str
@@ -82,6 +82,7 @@ async def elg(data: Ballot):
         re_shuffled = permut.cipherPermutation(params, keys, shuffled_ciphers)
         res = []
         for item in re_shuffled:
+            print(item.decryption(params, keys).plainText)
             res.append(intToString(item.decryption(params, keys).plainText))
         for item in res:
             print(item)
