@@ -1,12 +1,12 @@
 import bigInt, { BigInteger } from "big-integer";
-import { bigint, quotelessJson } from "zod";
+// import { bigint, quotelessJson } from "zod";
 import {getRandomBigInt, modPow, modInverse} from "./numTheory";
 
 export function stringToBigInt(str: string): BigInteger {
     const encoder = new TextEncoder();
     const encoded = encoder.encode(str); // UTF-8でエンコード
     let result = bigInt(0);
-    for (let byte of encoded) {
+    for (const byte of encoded) {
         result = (result.shiftLeft(bigInt(8))).add(bigInt(byte)); // 8ビットずつシフトして加算
     }
     return result;
@@ -77,13 +77,13 @@ export class ElgamalCipherText {
     }
 
     public encryption(params: Parameters, keys: ElgamalKeys, ptxt: ElgamalPlainText): ElgamalCipherText {
-        let r = getRandomBigInt(params.q)
-        this.ctxt = [modPow(params.g, r,params.q), (ptxt.ptxt.multiply(modPow(keys.publicKey, r, params.q))).mod(params.q)]
+        const r = getRandomBigInt(params.p)
+        this.ctxt = [modPow(params.g, r,params.p), (ptxt.ptxt.multiply(modPow(keys.publicKey, r, params.p))).mod(params.p)]
         return this
     }
 
     public decryption(params: Parameters, keys: ElgamalKeys): ElgamalPlainText {
-        // return ElgamalPlainText(self.cipherText[1] * modinv(modPow(self.cipherText[0], keys.secretKey, params.q), params.q )%params.q)
-        return new ElgamalPlainText((this.ctxt[1].multiply(modInverse(modPow(this.ctxt[0], keys.secretKey, params.q),params.q))).mod(params.q))
+        // return ElgamalPlainText(self.cipherText[1] * modinv(modPow(self.cipherText[0], keys.secretKey, params.p), params.p )%params.p)
+        return new ElgamalPlainText((this.ctxt[1].multiply(modInverse(modPow(this.ctxt[0], keys.secretKey, params.p),params.p))).mod(params.p))
     }
 }

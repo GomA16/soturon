@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
 import React, {useState} from "react";
@@ -84,7 +85,7 @@ const VotingTop = () => {
                     placeholder="Enter your gender"
                 />
                 </div>
-                <button type="submit">Submit</button>
+                <Button type="submit">Submit</Button>
             </form>
             {responseMessage && <p>{responseMessage}</p>}
     </div>

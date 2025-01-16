@@ -1,7 +1,3 @@
-// 有権者の情報を読み取る
-// サーバからチャレンジを受け取る
-// レスポンスをサーバーに送り、サーバー側での検証が成功したら画面遷移
-
 "use client";
 
 import React, { useEffect, useState} from "react";
@@ -10,20 +6,13 @@ import { Button } from "@/components/ui/button";
 import electionData from "@/data/electionData.json";
 import  Link  from "next/link";
 
-const RegistraionTop = () => {
+const checkAuthority = () => {
     const [status, setStatus] = useState("loading...");
+    let voterData;
+    console.log("voterData", voterData)
     let challenge = 0;
-    let voterData = {
-        "name":"",
-        "Age":"",
-        "Gender":"",
-        "challenge": "",
-        "signature": ""
-    };
     // いったんjsonからデータを読み出す
-    const voterList = electionData.voterInfoList;
-    const voter = voterList[0];
-    console.log(voter);
+    const keys = electionData.officialKey;
 
     // チャレンジを受け取る
     const getChallenge = async () => {
@@ -39,26 +28,14 @@ const RegistraionTop = () => {
             console.log('challenge error', error);
         }
     };
-
+    const dataToSign = {
+        "voterData": voterData,
+        "challenge": challenge
+    }
     // 署名の生成
     let signature: string = "";
-    const signKey = voter.signKey;
-    const message: string = Buffer.from(challenge.toString()).toString("base64");
-    // const sign = () => {
-    //     try {
-    //         const signKey = voter.signKey;
-    //         // チャレンジをstring->json->base64の順でエンコード
-    //         message = Buffer.from(challenge.toString()).toString("base64");
-    //         const sign = createSign('SHA256');
-    //         console.log("message to sign:", message);
-    //         sign.write(message);
-    //         sign.end();
-    //         signature= genSignature(message, signKey);
-    //         console.log("signature:",signature);
-    //     }catch ( error ) {
-    //         console.log("sign error\n", error);
-    //     }
-    // };
+    const signKey = keys.signKey;
+    const message: string = Buffer.from(JSON.stringify(dataToSign)).toString("base64");
     const genSignature = async () => {
         const response = await fetch('http://localhost:3000/api/sign', {
             method: 'POST',
@@ -71,21 +48,18 @@ const RegistraionTop = () => {
     };
     // レスポンス生成
     const sendResponse = async () => {
-        voterData = {
-            "name": voter.name,
-            "Age": voter.Age,
-            "Gender": voter.Gender,
-            "challenge": message,
+        const requestData = {
+            "message": message,
             "signature": signature
         };
-        console.log("voterData\n",voterData);
+        console.log("requestData\n",requestData);
         try{
-            const response = await fetch(BACKEND_URL+"/registration/verifyVoter",{
+            const response = await fetch(BACKEND_URL+"/registration/verifyOfficial",{
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(voterData),
+                body: JSON.stringify(requestData),
             });
             if (!response.ok) {
                 throw new Error("Failed to submit data");
@@ -101,30 +75,27 @@ const RegistraionTop = () => {
             console.log("response error", error);
         }
     };
-
-    const saveData = () => {
-        sessionStorage.setItem("voterData", JSON.stringify({voterData}));
-    };
-
     const handleProcess = async () => {
         await getChallenge();
         await genSignature();
         await sendResponse();
-        saveData();
+        sessionStorage.setItem("officialKeys", JSON.stringify(electionData.officialKey));
     };
 
-    useEffect(() => {handleProcess()}, []);
+    useEffect(() => {
+        voterData = sessionStorage.getItem("voterData");
+        handleProcess()}, []);
 
-    return(
+    return (
         <div className="h-screen flex justify-center items-center"
         style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <h1> Input your information</h1>
+            <h1>Read Officials Code</h1>
             <p>{status}</p>
             <Button>
-            <Link href="/voter/registration/authority">next</Link>
+                <Link href = "/voter/registration/pin">next</Link>
             </Button>
         </div>
     )
-}
+};
 
-export default RegistraionTop
+export default checkAuthority;

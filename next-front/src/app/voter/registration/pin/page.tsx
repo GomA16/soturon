@@ -1,5 +1,7 @@
 "use client"
 
+import { BACKEND_URL } from "@/src/config/constants";
+import electionData from "@/data/electionData.json";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -7,20 +9,20 @@ import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { useRouter } from "next/navigation"
+import { ElgamalCipherText, ElgamalKeys, ElgamalPlainText, Parameters } from "@/src/app/tools/myPrimitives/elgamal";
+import bigInt from "big-integer";
+import { useRouter } from "next/navigation";
 
 
-const BACKEND_URL = "http://localhost:8000";
 
 const formSchema = z.object({
-  PINcode: z.string().min(2, {
+    PIN: z.string().min(2, {
     message: "Username must be at least 2 characters.",
   }),
 })
@@ -32,7 +34,7 @@ const PINpage = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      PINcode: "",
+      PIN: "",
     },
   })
 
@@ -41,18 +43,20 @@ const PINpage = () => {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
     try{
-        const registrationData = sessionStorage.getItem("registrationData");
-        if (!registrationData) {
-            throw new Error("No");
-        }
+        // PINの暗号化
+        const params = new Parameters();
+        params.setParams(electionData.election_vars.parameters);
+        const keys = new ElgamalKeys();
+        keys.setKeys(electionData.election_vars.authKeys);
+        const pin = new ElgamalPlainText(bigInt(values.PIN));
+        const encPIN = new ElgamalCipherText();
+        encPIN.encryption(params,keys,pin);
+        const ciphers = [encPIN.ctxt[0].toString(), encPIN.ctxt[1].toString()];
 
-        const parseData = JSON.parse(registrationData);
-        const requestData = { ...parseData, PINcode: Number(values.PINcode)}
-        requestData.Age = Number(requestData.Age);
-        console.log(requestData)
-        console.log(registrationData);
+        const requestData = {"pk":electionData.voterInfoList[0].verifyKey , "PIN": ciphers}
+        console.log("requestData",requestData);
 
-        const response = await fetch(BACKEND_URL+"/registration/regist_pin",{
+        const response = await fetch(BACKEND_URL+"/registration/registerPIN",{
                 method:"POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -66,10 +70,11 @@ const PINpage = () => {
         }
 
         const data = await response.json();
+        console.log("data", data);
         if(data.status === "success") {
             console.log("pin success");
             return (
-                <h1>your PINcode has been saved</h1>
+                router.push("/voter/registration/complete")
             );
         }else{
             console.log("pin failed");
@@ -84,24 +89,28 @@ const PINpage = () => {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="PINcode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>PIN code</FormLabel>
-              <FormControl>
-                <Input placeholder="input PIN code" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit">Submit</Button>
-      </form>
-    </Form>
+
+    <div className="h-screen flex justify-center items-center"
+    style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <FormField
+            control={form.control}
+            name="PIN"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>PIN code</FormLabel>
+                <FormControl>
+                  <Input placeholder="input PIN code" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit">Submit</Button>
+        </form>
+      </Form>
+    </div>
   )
 }
 
