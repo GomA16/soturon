@@ -17,13 +17,6 @@ from ..data.variables import *
 
 router = APIRouter()
 
-PUBLIC_KEY_PEM = """-----BEGIN PUBLIC KEY-----
-ME4wEAYHKoZIzj0CAQYFK4EEACEDOgAEldOO+DZ95yenqbH1WpkLYylYUEbp51zV
-2aKUlw1jMCLY4s8EH30hgUDO6XG+S9+42mFgDR0qZ/U=
------END PUBLIC KEY-----"""
-
-SIGNATURE = "MD0CHQDm4V8xbAdeWPSvAoaD1ot5Ox+DoE402vfEPy6EAhxJlYsIxoD/uXLeLhxNofzuWdx/6xbpK3LKSExn"
-
 params = Parameters()
 params.setParams(vars["parameters"])
 keys = ElgamalKeys()
