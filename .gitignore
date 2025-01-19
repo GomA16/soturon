@@ -4,6 +4,6 @@ venv
 backend/sandbox.py
 backend/helios_auth
 backend/app/routers/sandbox.py
-backend/app/routers/sandbox.ipynb
+backend/app/notebooks
 next-front/node_modules
 next-front/.next

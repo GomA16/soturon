@@ -1,88 +1,125 @@
-"use client";
+"use client"
 
-import { BACKEND_URL } from "@/src/config/constants";
-import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { useEffect, useState } from "react"
+import { BACKEND_URL } from "@/src/config/constants"
+import { ElgamalCipherText, ElgamalKeys, ElgamalPlainText, Parameters } from "@/src/app/tools/myPrimitives/elgamal"
+import electionData from "@/data/electionData.json"
+import bigInt from "big-integer"
+import { useRouter } from "next/navigation"
 
-const backend = BACKEND_URL;
+// // フォームのスキーマ
+// const FormSchema = z.object({
+//     type: z.string().refine(value => {
+//         return radioOptions.includes(value); // validValuesがAPIから取得した選択肢
+//       }, {
+//         message: "Invalid selection, please choose a valid option.",
+//       }),
+// })
 
-type Candidate = {
-    id: number;
-    name: string;
-    party: string;
-    district: string;
-};
-
-const CandidateSelect = () => {
-    const [candidates, setCandidates] = useState<Candidate[]>([]);
-    const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
-    const [isLoading, setIsLoading] = useState(true); // ローディング状態を管理
-    const router = useRouter();
-
-    useEffect(() => {
-        const fetchCandidates = async () => {
-            try {
-                const response = await fetch(`${backend}/voting/candidates`);
-                if (!response.ok) {
-                    throw new Error("Failed to fetch candidates");
-                }
-                const data: { candidates: Candidate[] } = await response.json();
-                console.log(data);
-                setCandidates(data.candidates || []); 
-            } catch (error) {
-                console.error("Error fetching candidates:", error);
-                setCandidates([]); 
-            } finally {
-                setIsLoading(false); 
-            }
-        };
-        fetchCandidates();
-    }, []);
-
-    const handleClick = () => {
-        if (selectedCandidate) {
-            const votingInfo = sessionStorage.getItem("voterInfo");
-            if (!votingInfo) {
-                alert("No voter information found");
-                return;
-            }
-            const parseData = JSON.parse(votingInfo);
-            const storeData = { ...parseData, selectedCandidate: selectedCandidate };
-            sessionStorage.setItem("votingInfo", JSON.stringify(storeData));
-            router.push("/voter/voting/checkinfo");
-        } else {
-            alert("Please select a candidate");
+const selectCandidate = () => {
+  const router = useRouter();
+  const [radioOptions, setRadioOptions] = useState<any[]>([]);  // APIから取得したラジオボタンの選択肢を格納する状態
+  const [schemaValue, setSchemaValue] = useState<String[]>([]);
+    // フォームのスキーマ
+    const FormSchema = z.object({
+        type: z.string().refine(value => {
+            return schemaValue.includes(value); // validValuesがAPIから取得した選択肢
+        }, {
+            message: "Invalid selection, please choose a valid option.",
+        }),
+    })
+    const form = useForm<z.infer<typeof FormSchema>>({
+      resolver: zodResolver(FormSchema),
+    })
+  useEffect(() => {
+    // APIを叩いて選択肢を取得
+    const fetchOptions = async () => {
+      try {
+        const response = await fetch(BACKEND_URL + "/voting/getCandidateList");  // 適切なAPIエンドポイントに変更
+        if (!response.ok) {
+          throw new Error("Failed to fetch options");
         }
-    };
+        const data = await response.json();
+        console.log(data.candidateList);
+        const values = data.candidateList.map(candidate => candidate.index);
+        setRadioOptions(data.candidateList);  // 取得したデータを状態にセット
+        console.log(values)
+        setSchemaValue(values);
+        console.log(radioOptions);
+      } catch (error) {
+        console.error("Error fetching options:", error);
+      }
+    }
 
-    return (
-        <div>
-            <h1>Select a Candidate</h1>
-            {isLoading ? (
-                <p>Loading candidates...</p> // ローディング中のUI
-            ) : (
-                Array.isArray(candidates) && candidates.length > 0 ? (
-                    candidates.map((candidate) => (
-                        <div key={candidate.id}>
-                            <input
-                                type="radio"
-                                id={`candidate-${candidate.id}`}
-                                name="candidate"
-                                value={candidate.id}
-                                onChange={() => setSelectedCandidate(candidate)}
-                            />
-                            <label htmlFor={`candidate-${candidate.id}`}>
-                                {candidate.name} ({candidate.party})
-                            </label>
-                        </div>
-                    ))
-                ) : (
-                    <p>No candidates available</p> // 候補者が存在しない場合のUI
-                )
+    fetchOptions();
+  }, []);
+
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    const params = new Parameters();
+    params.setParams(electionData.election_vars.parameters);
+    const keys = new ElgamalKeys();
+    keys.setKeys(electionData.election_vars.tallyKeys);
+    const candidate = new ElgamalPlainText(bigInt(data.type));
+    const encCandidate = new ElgamalCipherText();
+    encCandidate.encryption(params, keys, candidate);
+    sessionStorage.setItem("encCandidate", JSON.stringify({encCandidate: encCandidate}));
+    router.push("/voter/voting/pin");
+    console.log(encCandidate);
+  }
+
+  return (
+    <div className="h-screen flex justify-center items-center" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+          <FormField
+            control={form.control}
+            name="type"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel>Notify me about...</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex flex-col space-y-3"
+                  >
+                    {/* ラジオボタンの選択肢がAPIから取得されるまで、ローディング中の表示 */}
+                    {radioOptions.length === 0 ? (
+                      <p>Loading options...</p>
+                    ) : (
+                      radioOptions.map((option) => (
+                        <FormItem key={option.index} className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value={option.index} />
+                          </FormControl>
+                          <FormLabel className="font-normal">{option.name}</FormLabel>
+                        </FormItem>
+                      ))
+                    )}
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-            <button type="button" onClick={handleClick}>Next</button>
-        </div>
-    );
-};
+          />
+          <Button type="submit">Submit</Button>
+        </form>
+      </Form>
+    </div>
+  )
+}
 
-export default CandidateSelect;
+export default selectCandidate;

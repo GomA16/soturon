@@ -16,6 +16,7 @@ from ..components.myAlgs.hash import *
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import ECC
 from Crypto.Signature import DSS
+from .shareResource import sharedResource
 import base64
 import traceback
 import json
@@ -55,7 +56,7 @@ async def verifyVoter(data: VoterData):
             pk = item["verifyKey"]
     # pkで署名を確認
     try:
-        print(base64.b64decode(data.challenge))
+        # print(base64.b64decode(data.challenge))
         # todo: できればデコードしたチャレンジがバックエンドが送信したものと一致するか確認したい
         hash_value = SHA256.new((data.challenge.encode('utf-8')))
         public_key = ECC.import_key(pk, curve_name='prime256v1')
@@ -115,6 +116,7 @@ class PINdata(BaseModel):
     PIN: list[str]
 @router.post("/registerPIN")
 async def registerPIN(data: PINdata):
+    print("done")
     params = Parameters()
     params.setParams(json_data["election_vars"]["parameters"])
     keys = ElgamalKeys()
@@ -123,4 +125,6 @@ async def registerPIN(data: PINdata):
     cipher.setCipher(data.PIN)
     pin = cipher.decryption(params, keys)
     print(pin)
+    sharedResource.updatePINList(data.pk, pin.plainText)
+    sharedResource.getPINList()
     return {"status": "success"}

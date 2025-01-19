@@ -5,115 +5,70 @@
 "use client";
 
 import React, { useEffect, useState} from "react";
-import { BACKEND_URL } from "@/src/config/constants";
+// import { BACKEND_URL } from "@/src/config/constants";
 import { Button } from "@/components/ui/button";
 import electionData from "@/data/electionData.json";
 import  Link  from "next/link";
+import { genSignature, getChallenge, sendResponse } from "@/src/app/components/authentication";
+// import { useZxing } from "react-zxing";
 
 const RegistraionTop = () => {
     const [status, setStatus] = useState("loading...");
-    let challenge = 0;
-    let voterData = {
-        "name":"",
-        "Age":"",
-        "Gender":"",
-        "challenge": "",
-        "signature": ""
-    };
-    // いったんjsonからデータを読み出す
-    const voterList = electionData.voterInfoList;
-    const voter = voterList[0];
-    console.log(voter);
 
-    // チャレンジを受け取る
-    const getChallenge = async () => {
-        try{
-            const response = await fetch(BACKEND_URL+"/registration/challenge");
-            if (!response.ok) {
-                console.log("errordayon")
-            }
-            const data = await response.json();
-            challenge = data.challenge;
-            console.log("challenge", challenge);
-        }catch (error) {
-            console.log('challenge error', error);
-        }
-    };
-
-    // 署名の生成
-    let signature: string = "";
-    const signKey = voter.signKey;
-    const message: string = Buffer.from(challenge.toString()).toString("base64");
-    // const sign = () => {
-    //     try {
-    //         const signKey = voter.signKey;
-    //         // チャレンジをstring->json->base64の順でエンコード
-    //         message = Buffer.from(challenge.toString()).toString("base64");
-    //         const sign = createSign('SHA256');
-    //         console.log("message to sign:", message);
-    //         sign.write(message);
-    //         sign.end();
-    //         signature= genSignature(message, signKey);
-    //         console.log("signature:",signature);
-    //     }catch ( error ) {
-    //         console.log("sign error\n", error);
-    //     }
-    // };
-    const genSignature = async () => {
-        const response = await fetch('http://localhost:3000/api/sign', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ "message": message, "signKey": signKey }),
-        });
-        // console.log("sigresponse:\n",response);
-        const data = await response.json();
-        signature = data.signature;
-    };
-    // レスポンス生成
-    const sendResponse = async () => {
-        voterData = {
-            "name": voter.name,
-            "Age": voter.Age,
-            "Gender": voter.Gender,
-            "challenge": message,
-            "signature": signature
-        };
-        console.log("voterData\n",voterData);
-        try{
-            const response = await fetch(BACKEND_URL+"/registration/verifyVoter",{
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(voterData),
-            });
-            if (!response.ok) {
-                throw new Error("Failed to submit data");
-            }
-
-            const data = await response.json();
-
-            if(data.status == "success") {
-                setStatus("success!!");
-                console.log("success!!");
-            }
-        }catch (error) {
-            console.log("response error", error);
-        }
-    };
-
-    const saveData = () => {
+    const saveData = (voterData: any):boolean => {
         sessionStorage.setItem("voterData", JSON.stringify({voterData}));
+        return true
     };
 
     const handleProcess = async () => {
-        await getChallenge();
-        await genSignature();
-        await sendResponse();
-        saveData();
+        
+        // いったんjsonからデータを読み出す
+        const voterList = electionData.voterInfoList;
+        const voter = voterList[0];
+        console.log("voter", voter);
+    
+        // 署名の生成
+        const signKey = voter.signKey;
+    
+        // レスポンス生成
+        const challenge = await getChallenge();
+        if (!challenge) {
+            console.log("Failed to get challenge");
+            return;
+        }
+
+        const message: string = Buffer.from(challenge.toString()).toString("base64");
+        const signature = await genSignature(message, signKey);
+        if (!signature) {
+            console.log("Failed to generate signature");
+            return;
+        }
+        const voterData = {
+            "name":voter.name,
+            "Age":voter.Age,
+            "Gender":voter.Gender,
+            "challenge": message,
+            "signature": signature
+        };
+        const isSuccess = await sendResponse(voterData,"/registration/verifyVoter");
+        if (isSuccess) {
+            setStatus("Success!");
+            console.log("Voter registration successful!");
+        } else {
+            setStatus("Failed");
+            console.log("Voter registration failed.");
+        }
+        saveData(voterData);
     };
 
     useEffect(() => {handleProcess()}, []);
+
+    // const [result, setResult] = useState<string>("");
+    // const { ref } = useZxing({
+    //   onDecodeResult(result) {
+    //     setResult(result.getText());
+    //   },
+    // });
 
     return(
         <div className="h-screen flex justify-center items-center"
@@ -123,6 +78,11 @@ const RegistraionTop = () => {
             <Button>
             <Link href="/voter/registration/authority">next</Link>
             </Button>
+            {/* <video ref={ref} />
+            <p>
+                <span>Last result:</span>
+                <span>{result}</span>
+            </p> */}
         </div>
     )
 }

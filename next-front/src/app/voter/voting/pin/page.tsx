@@ -1,66 +1,100 @@
-"use client";
+"use client"
 
+import { BACKEND_URL } from "@/src/config/constants";
+import electionData from "@/data/electionData.json";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { ElgamalCipherText, ElgamalKeys, ElgamalPlainText, Parameters } from "@/src/app/tools/myPrimitives/elgamal";
+import bigInt from "big-integer";
 import { useRouter } from "next/navigation";
 
-import React, {useState} from "react";
 
-const BACKEND_URL = "http://localhost:8000";
 
-const VotingPin = () => {
-    const router = useRouter();
+const formSchema = z.object({
+    PIN: z.string().min(2, {
+    message: "Username must be at least 2 characters.",
+  }),
+})
 
-    const [formData, setFormData] = useState({
-        "PINcode":0,
-    });
+const PINpage = () => {
+  const router = useRouter();
+  
+  // 1. Define your form.
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      PIN: "",
+    },
+  })
 
-    const[responseMessage, setResponseMessage] = useState("");
+  // 2. Define a submit handler.
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    // Do something with the form values.
+    // ✅ This will be type-safe and validated.
+    try{
+        // PINの暗号化
+        const params = new Parameters();
+        params.setParams(electionData.election_vars.parameters);
+        const keys = new ElgamalKeys();
+        keys.setKeys(electionData.election_vars.authKeys);
+        const pin = new ElgamalPlainText(bigInt(values.PIN));
+        const encPIN = new ElgamalCipherText();
+        encPIN.encryption(params,keys,pin);
+        const ciphers = {
+            c1: encPIN.ctxt[0].toString(), 
+            c2: encPIN.ctxt[1].toString()
+        };
+        const encCandidate = JSON.parse(sessionStorage.getItem("encCandidate")).encCandidate;
+        const ballot = {
+            pk: electionData.voterInfoList[0].verifyKey,
+            pin: encPIN.ctxt,
+            candidate: encCandidate.ctxt
+        };
+        // sessionStorage.setItem("encPIN", JSON.stringify(ciphers));
+        sessionStorage.setItem("ballot", JSON.stringify(ballot));
+        router.push("/voter/voting/checkinfo");
+    }catch(error){
+        console.log("pin code error", error)
+    }
+    console.log(values)
+  }
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-      };
+  return (
 
-    const handleClick = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try{
-
-            const voterInfo = sessionStorage.getItem("votingData");
-            if (!voterInfo) {
-                throw new Error("No");
-            }
-
-            const parseData = JSON.parse(voterInfo);
-            const storeData = { ...parseData, PINcode: Number(formData.PINcode)}
-            storeData.Age = Number(storeData.Age)
-            console.log(storeData)
-            sessionStorage.setItem("voterInfo",JSON.stringify(storeData));
-            router.push("/voter/voting/candidate");
-            
-        }catch(error) {
-            console.error("Error:", error);
-            setResponseMessage("Failed");
-        }
-    };
-
-    return(
-        <div>
-            <h1> Input your information</h1>
-            {/* <form onSubmit={handleClick}> */}
-                <div>
-                <label>PINcode:</label>
-                <input
-                    type="text"
-                    name="PINcode"
-                    value={formData.PINcode}
-                    onChange={handleChange}
-                    placeholder="Enter your PINcode"
-                />
-                </div>
-                <button type="button" onClick={handleClick}>Next</button>
-            {/* </form> */}
-            {responseMessage && <p>{responseMessage}</p>}
+    <div className="h-screen flex justify-center items-center"
+    style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <FormField
+            control={form.control}
+            name="PIN"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>PIN code</FormLabel>
+                <FormControl>
+                  <Input placeholder="input PIN code" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit">Submit</Button>
+        </form>
+      </Form>
     </div>
-    )
+  )
 }
 
-export default VotingPin
+
+export default PINpage

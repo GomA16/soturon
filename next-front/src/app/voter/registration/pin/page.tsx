@@ -52,8 +52,12 @@ const PINpage = () => {
         const encPIN = new ElgamalCipherText();
         encPIN.encryption(params,keys,pin);
         const ciphers = [encPIN.ctxt[0].toString(), encPIN.ctxt[1].toString()];
+        // const pk = new ElgamalPlainText(bigInt(electionData.voterInfoList[0].verifyKey));
+        // const encPk = new ElgamalCipherText();
+        // encPk.encryption(params, keys, pk);
 
-        const requestData = {"pk":electionData.voterInfoList[0].verifyKey , "PIN": ciphers}
+        const requestData = {"pk":electionData.voterInfoList[0].verifyKey , "PIN": ciphers};
+        sessionStorage.setItem("pinData", JSON.stringify(requestData));
         console.log("requestData",requestData);
 
         const response = await fetch(BACKEND_URL+"/registration/registerPIN",{

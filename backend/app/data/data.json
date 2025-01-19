@@ -31,7 +31,7 @@
              "Age": "23",
              "Gender": "M",
              "signKey": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgmcU21QD/RZHnZbvE\nSpN5wxvBo9Zfsi0x2R3NEF4u0oqhRANCAAR6p2HcR3d+58wl0Vj1dTuEuPvaXUx8\nEPI53AboZOGUl9gycT9s6wuLeao8EEtugKswC1+4AVwHtyvY44MtL4uo\n-----END PRIVATE KEY-----",
-             "veriffKey": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEeqdh3Ed3fufMJdFY9XU7hLj72l1M\nfBDyOdwG6GThlJfYMnE/bOsLi3mqPBBLboCrMAtfuAFcB7cr2OODLS+LqA==\n-----END PUBLIC KEY-----"
+             "verifyKey": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEeqdh3Ed3fufMJdFY9XU7hLj72l1M\nfBDyOdwG6GThlJfYMnE/bOsLi3mqPBBLboCrMAtfuAFcB7cr2OODLS+LqA==\n-----END PUBLIC KEY-----"
          },
          {
              "name": "Morishita",
@@ -62,7 +62,7 @@
                  }
              }
      },
-     "candidate_list": [
+     "candidateList": [
          {
              "index": "11",
              "name": "Alice",
