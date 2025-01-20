@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from databases import Database
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, insert, select
+from sqlalchemy import text
 from pydantic import BaseModel
-from ..models.election_tables import people, electoral_roll, candidate_list, bulletin_board
-from ..core.database import database
+from ..models.election_tables import *
+from ..core.database import async_session, engine
 from ..helios_crypto import algs
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import ECC

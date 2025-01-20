@@ -1,11 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from databases import Database
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, insert, select
+from ..models.election_tables import *
 from pydantic import BaseModel
 # from helios_crypto import *
-from ..models.election_tables import people, electoral_roll
-from ..core.database import database
+from ..core.database import async_session, engine
 from ..components.myAlgs.permutations import *
 from ..components.myAlgs.myPrimitives import * 
 from ..components.myAlgs.elgamal import *
@@ -19,6 +17,8 @@ import base64
 import traceback
 import json
 import os
+import asyncio
+from sqlalchemy import text
 
 # 現在のスクリプトのディレクトリを取得
 current_dir = os.path.dirname(__file__)

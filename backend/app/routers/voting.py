@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from databases import Database
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, insert, select
+from fastapi import APIRouter
+
 from pydantic import BaseModel
-from ..models.election_tables import people, electoral_roll, candidate_list, bulletin_board
-from ..core.database import database
+
+from sqlalchemy import text
+from ..models.election_tables import *
+from ..core.database import async_session, engine
+
 from ..components.myAlgs.myPrimitives import * 
 from ..components.myAlgs.elgamal import *
 from Crypto.Hash import SHA256
@@ -14,7 +15,6 @@ import base64
 import traceback
 import json
 import os
-from .shareResource import *
 
 # 現在のスクリプトのディレクトリを取得
 current_dir = os.path.dirname(__file__)
@@ -113,20 +113,27 @@ async def submitBallot(data: candidateChoice):
         encPIN.setCipher(data.pin)
         pin = encPIN.decryption(params, keys)
         print("pin",pin)
+
+            
+        electralRoll = []
+        async with async_session() as session:
+            result = await session.execute(text("SELECT * FROM electoral_roll"))
+            print("\nresult\n",result.fetchall())
+            for item in result:
+                electralRoll.append({
+                    "pk":item[1],
+                    "PIN":item[2]
+                })
+            
         ballot = []
-        if {"pk": data.pk, "PIN": pin} in sharedResource.sharedPIN:
+        if {"pk": data.pk, "PIN": pin} in electralRoll:
             ballot = [data.candidate, data.pin, data.pk]
         else:
             dumy = ElgamalPlainText(1)
             encDumy = ElgamalCipherText()
             encDumy.encryption(params, keys, dumy)
             ballot = [encDumy.cipherText, data.pin, data.pk]
-        for item in sharedResource.ballots:
-            if item.pk == data.pk and item.pin == data.pin:
-                sharedResource.addRevocationList(item)
-        sharedResource.addBallot(ballot)
-        sharedResource.showBallots()
-        sharedResource.showRevocationList()
+            
         return {"status": "success"}
     except Exception as e:
         traceback.print_exc()

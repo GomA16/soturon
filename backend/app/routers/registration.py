@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from databases import Database
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, insert, select
+from fastapi import APIRouter
+
 from pydantic import BaseModel
-# from helios_crypto import *
-from ..models.election_tables import people, electoral_roll
-from ..core.database import database
+from ..models.election_tables import *
+from ..core.database import async_session, engine
+from sqlalchemy import text
+
 from ..components.myAlgs.myPrimitives import getRandomElement
 from ..data.variables import vars
 from ..components.myAlgs.permutations import *
@@ -13,10 +12,10 @@ from ..components.myAlgs.myPrimitives import *
 from ..components.myAlgs.elgamal import *
 from ..components.myAlgs.commitment import *
 from ..components.myAlgs.hash import *
+
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import ECC
 from Crypto.Signature import DSS
-from .shareResource import sharedResource
 import base64
 import traceback
 import json
@@ -125,6 +124,9 @@ async def registerPIN(data: PINdata):
     cipher.setCipher(data.PIN)
     pin = cipher.decryption(params, keys)
     print(pin)
-    sharedResource.updatePINList(data.pk, pin.plainText)
-    sharedResource.getPINList()
+    async with async_session() as session:
+        async with session.begin():
+            voter = ElectoralRoll(pk=f"{data.pk}", pin=f"{pin.plainText}")
+            session.add(voter)
+
     return {"status": "success"}
