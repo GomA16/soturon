@@ -1,9 +1,20 @@
 from typing import Self
+
+class Ballot:
+    def __init__(self, candidate, pin, pk):
+        self.candidate = candidate
+        self.pk =pk
+        self.pin = pin
+
+    def __str__(self):
+        return f"ballot: {self.candidate}, {self.pin}, {self.pk}"
+
 class shareResource:
     def __init__(self):
         self.sharedPIN = []
-        self.ballots = []
-        self.revocationList = []
+        self.ballots:list[Ballot] = []
+        self.revocationList:list[Ballot] = []
+        self.mixedBallots:list[Ballot] = []
 
     def addPIN(self, pinDict: dict)-> Self:
         self.sharedPIN.append(pinDict)
@@ -31,8 +42,21 @@ class shareResource:
         self.revocationList.append(element)
         return self
     
+    def showRevocationList(self) -> None:
+        for item in self.revocationList:
+            print("revocated", item)
+    
     def addBallot(self, ballot: list)->Self:
-        self.ballots.append(ballot)
+        self.ballots.append(Ballot(ballot[0], ballot[1], ballot[2]))
         return self
+    
+    def showBallots(self) -> None:
+        for item in self.ballots:
+            print(item)
+        return None
+    
+    def setMixedBallots(self, mixedBallots:list[Ballot]) -> Self:
+        self.mixedBallots = mixedBallots
+        return self 
 
 sharedResource = shareResource()

@@ -1,10 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from databases import Database
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, insert, select
-from pydantic import BaseModel
 from .core.database import database, metadata, engine
-from .routers import registration, voting, test
+from .routers import registration, voting, test, mix, tally
 from .models.election_tables import *
 # from helios_crypto import *
 
@@ -15,6 +12,8 @@ metadata.create_all(engine)
 
 app.include_router(registration.router, prefix="/registration", tags=["registration"])
 app.include_router(voting.router, prefix="/voting", tags=["voting"])
+app.include_router(mix.router, prefix="/mix", tags=["mix"])
+app.include_router(tally.router, prefix="/tally", tags=["tally"])
 app.include_router(test.router, prefix="/test", tags=["test"])
 
 

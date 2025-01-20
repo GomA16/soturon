@@ -20,6 +20,7 @@
      },
      "voterInfoList": [
          {
+            "id": 0,
              "name": "Gotoh",
              "Age": "22",
              "Gender": "M",
@@ -27,6 +28,7 @@
              "verifyKey": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEzD9t3lYhc049tIVodh7R+26NzQDa\nPLQBtyh5uxquNcHw9t+CIDUBWaKCxagqEGd9NE3cXjb0z6aviy+Jjg21yA==\n-----END PUBLIC KEY-----"
          },
          {
+            "id": 1,
              "name": "Mizuno",
              "Age": "23",
              "Gender": "M",
@@ -34,6 +36,7 @@
              "verifyKey": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEeqdh3Ed3fufMJdFY9XU7hLj72l1M\nfBDyOdwG6GThlJfYMnE/bOsLi3mqPBBLboCrMAtfuAFcB7cr2OODLS+LqA==\n-----END PUBLIC KEY-----"
          },
          {
+            "id": 2,
              "name": "Morishita",
              "Age": "24",
              "Gender": "M",
@@ -45,6 +48,14 @@
          {
              "pk": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEzD9t3lYhc049tIVodh7R+26NzQDa\nPLQBtyh5uxquNcHw9t+CIDUBWaKCxagqEGd9NE3cXjb0z6aviy+Jjg21yA==\n-----END PUBLIC KEY-----",
              "PIN": "632"
+         },
+         {
+            "pk": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEeqdh3Ed3fufMJdFY9XU7hLj72l1M\nfBDyOdwG6GThlJfYMnE/bOsLi3mqPBBLboCrMAtfuAFcB7cr2OODLS+LqA==\n-----END PUBLIC KEY-----",
+            "PIN": "147"
+         },
+         {
+            "pk": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEK2JWjEFdsRU+7llVbsbMLSe+lqNX\nNWJ1i7S8nBxl/zyxtwt/q5BypdsI1MH7eMpH36hoq4NHCtWjdEH3F8vVQA==\n-----END PUBLIC KEY-----",
+            "PIN": "596"
          }
      ],
      "validBallots":{

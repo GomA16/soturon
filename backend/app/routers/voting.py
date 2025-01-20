@@ -14,7 +14,7 @@ import base64
 import traceback
 import json
 import os
-from .shareResource import sharedResource
+from .shareResource import *
 
 # 現在のスクリプトのディレクトリを取得
 current_dir = os.path.dirname(__file__)
@@ -113,6 +113,20 @@ async def submitBallot(data: candidateChoice):
         encPIN.setCipher(data.pin)
         pin = encPIN.decryption(params, keys)
         print("pin",pin)
+        ballot = []
+        if {"pk": data.pk, "PIN": pin} in sharedResource.sharedPIN:
+            ballot = [data.candidate, data.pin, data.pk]
+        else:
+            dumy = ElgamalPlainText(1)
+            encDumy = ElgamalCipherText()
+            encDumy.encryption(params, keys, dumy)
+            ballot = [encDumy.cipherText, data.pin, data.pk]
+        for item in sharedResource.ballots:
+            if item.pk == data.pk and item.pin == data.pin:
+                sharedResource.addRevocationList(item)
+        sharedResource.addBallot(ballot)
+        sharedResource.showBallots()
+        sharedResource.showRevocationList()
         return {"status": "success"}
     except Exception as e:
         traceback.print_exc()

@@ -5,6 +5,13 @@ from ..components.myAlgs.commitment import *
 from ..components.myAlgs.hash import *
 from ..data.variables import *
 import sympy.ntheory.residue_ntheory as resd
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from databases import Database
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, insert, select
+from pydantic import BaseModel
+from ..models.election_tables import people, electoral_roll, candidate_list, bulletin_board
+from ..core.database import database
 
 
 param = Parameters()
@@ -86,6 +93,9 @@ def test1():
     elgKeys = ElgamalKeys()
     elgKeys.genKeys(param)
     print(elgKeys)
+
+def test4():
+    return None
  
 def main():
     # print(test1())

@@ -20,15 +20,6 @@ import electionData from "@/data/electionData.json"
 import bigInt from "big-integer"
 import { useRouter } from "next/navigation"
 
-// // フォームのスキーマ
-// const FormSchema = z.object({
-//     type: z.string().refine(value => {
-//         return radioOptions.includes(value); // validValuesがAPIから取得した選択肢
-//       }, {
-//         message: "Invalid selection, please choose a valid option.",
-//       }),
-// })
-
 const selectCandidate = () => {
   const router = useRouter();
   const [radioOptions, setRadioOptions] = useState<any[]>([]);  // APIから取得したラジオボタンの選択肢を格納する状態
@@ -43,7 +34,8 @@ const selectCandidate = () => {
     })
     const form = useForm<z.infer<typeof FormSchema>>({
       resolver: zodResolver(FormSchema),
-    })
+    });
+    
   useEffect(() => {
     // APIを叩いて選択肢を取得
     const fetchOptions = async () => {

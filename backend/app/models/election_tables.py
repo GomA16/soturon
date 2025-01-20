@@ -14,10 +14,8 @@ electoral_roll = Table(
     "electraol_roll",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("name", String),
-    Column("Age", Integer),
-    Column("Gender", String(1)),
-    Column("PINcode", Integer),
+    Column("pk", String),
+    Column("PIN", String)
 )
 
 candidate_list = Table(
@@ -35,4 +33,11 @@ bulletin_board = Table(
     Column("id",Integer, primary_key=True),
     Column("tag", String),
     Column("info",String),
+)
+
+testTable = Table(
+    "testTable",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("data", String),
 )

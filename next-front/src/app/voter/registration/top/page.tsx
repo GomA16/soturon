@@ -10,21 +10,45 @@ import { Button } from "@/components/ui/button";
 import electionData from "@/data/electionData.json";
 import  Link  from "next/link";
 import { genSignature, getChallenge, sendResponse } from "@/src/app/components/authentication";
+import { BACKEND_URL } from "@/src/config/constants";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 // import { useZxing } from "react-zxing";
 
 const RegistraionTop = () => {
+    const formSchema = z.object({
+        id: z.string().min(1, {
+        message: "id must be at least 2 characters.",
+      }),
+    })
     const [status, setStatus] = useState("loading...");
-
+    // 1. Define your form.
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+          id: "",
+        },
+      })
     const saveData = (voterData: any):boolean => {
         sessionStorage.setItem("voterData", JSON.stringify({voterData}));
         return true
     };
 
-    const handleProcess = async () => {
+    const onSubmit = async (values: z.infer<typeof formSchema>) => {
         
         // いったんjsonからデータを読み出す
         const voterList = electionData.voterInfoList;
-        const voter = voterList[0];
+        const voter = voterList[Number(values.id)];
         console.log("voter", voter);
     
         // 署名の生成
@@ -61,7 +85,7 @@ const RegistraionTop = () => {
         saveData(voterData);
     };
 
-    useEffect(() => {handleProcess()}, []);
+    // useEffect(() => {handleProcess()}, []);
 
     // const [result, setResult] = useState<string>("");
     // const { ref } = useZxing({
@@ -75,8 +99,27 @@ const RegistraionTop = () => {
         style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <h1> Input your information</h1>
             <p>{status}</p>
+
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <FormField
+                    control={form.control}
+                    name="id"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>id</FormLabel>
+                        <FormControl>
+                        <Input placeholder="input your id" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <Button type="submit">Submit</Button>
+                </form>
+            </Form>
             <Button>
-            <Link href="/voter/registration/authority">next</Link>
+            <Link href="/voter/registration/authority">next page</Link>
             </Button>
             {/* <video ref={ref} />
             <p>
