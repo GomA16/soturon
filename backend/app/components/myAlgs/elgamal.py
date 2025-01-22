@@ -47,7 +47,7 @@ class ElgamalCipherText():
     
     def encryption(self, params:Parameters, keys: ElgamalKeys, plainText:ElgamalPlainText) -> Self:
         r = getRandomElement(params.p)
-        self.cipherText = (modPow(params.g, r, params.p), (plainText.plainText*modPow(keys.publicKey, r, params.p)) % params.p)
+        self.cipherText = [modPow(params.g, r, params.p), (plainText.plainText*modPow(keys.publicKey, r, params.p)) % params.p]
         return self
 
     def decryption(self, params: Parameters, keys: ElgamalKeys) -> ElgamalPlainText:
@@ -56,7 +56,7 @@ class ElgamalCipherText():
     def reEncryption(self, params: Parameters, keys: ElgamalKeys) -> Self:
         r = getRandomElement(params.p)
         self.reEncR = r
-        self.cipherText = ((self.cipherText[0]*modPow(params.g, r, params.p)) % params.p, (self.cipherText[1]* modPow(keys.publicKey, r, params.p)) % params.p)
+        self.cipherText = [(self.cipherText[0]*modPow(params.g, r, params.p)) % params.p, (self.cipherText[1]* modPow(keys.publicKey, r, params.p)) % params.p]
         return self
     
     def __str__(self):

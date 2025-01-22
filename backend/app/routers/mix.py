@@ -39,6 +39,14 @@ router = APIRouter()
 
 @router.get("/mixBallots")
 async def mixBallots():
+    params = Parameters()
+    params.setParams(json_data["election_vars"]["parameters"])
+    tallyKeys = ElgamalKeys()
+    tallyKeys.setKeys(json_data["election_vars"]["tallyKeys"])
+    async with async_session() as session:
+        # stmt = delete(TestTable).where(TestTable.tag == "test")
+        async with session.begin():
+            await session.execute(text("DELETE FROM shuffled_ballots"))
     ballots = []
     async with async_session() as session:
         result = await session.execute(text("SELECT * FROM all_ballots"))
@@ -47,17 +55,18 @@ async def mixBallots():
             if item.revocated == "False":
                 ballots.append(ast.literal_eval(item.candidate))
     print("ballots\n",ballots)
+    ballots = [ElgamalCipherText().setCipher(item) for item in ballots]
     phai1 = Permutation()
     phai2 = Permutation()
     phai1.genPermutation(len(ballots))
     phai2.genPermutation(len(ballots))
-    firstMixedBallots = phai1.doPermutation(ballots)
+    firstMixedBallots = phai1.cipherPermutation(params, tallyKeys, ballots)
     print(firstMixedBallots)
-    secondMixedBallots = phai2.doPermutation(firstMixedBallots)
+    secondMixedBallots = phai2.cipherPermutation(params, tallyKeys, firstMixedBallots)
     async with async_session() as session:
         async with session.begin():
             for item in secondMixedBallots:
                 # print(type(item))
-                ballot = ShuffleBallots(candidate=str(item))
+                ballot = ShuffleBallots(candidate=str(item.cipherText))
                 session.add(ballot)
     return {"mixResult": secondMixedBallots}

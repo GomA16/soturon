@@ -1,4 +1,4 @@
-"use client"
+// "use client"
 
 import { BACKEND_URL } from "@/src/config/constants";
 import { createSign, createVerify, generateKeyPairSync, getCurves } from "crypto";
@@ -54,7 +54,7 @@ const TestElg = () => {
 
 const TestSignature = () => {
     
-    console.log(getCurves())
+    // console.log(getCurves())
     const { privateKey, publicKey } = generateKeyPairSync('ec', {
         namedCurve: 'prime256v1',
     });
@@ -122,29 +122,29 @@ const TestSignature = () => {
     );
 }
 
-const TestMix = () => {
-    const mix = async () => {
-        await fetch(BACKEND_URL + "/mix/mixBallots"); 
-    };
+// const TestMix = () => {
+//     const mix = async () => {
+//         await fetch(BACKEND_URL + "/mix/mixBallots"); 
+//     };
 
-    useEffect(() => {
-        mix();
-    },[]);
-    return(
-        <div>test page</div>
-    )
-}
+//     useEffect(() => {
+//         mix();
+//     },[]);
+//     return(
+//         <div>test page</div>
+//     )
+// }
 
-const TestTally = () => {
-    const tally = async () => {
-        await fetch(BACKEND_URL+ "/tally/tallyBallots");
-    };
-    useEffect(()=>{
-        tally();
-    },[]);
-    return(
-        <div>test tally</div>
-    )
-}
+// const TestTally = () => {
+//     const tally = async () => {
+//         await fetch(BACKEND_URL+ "/tally/tallyBallots");
+//     };
+//     useEffect(()=>{
+//         tally();
+//     },[]);
+//     return(
+//         <div>test tally</div>
+//     )
+// }
 
-export default TestTally
+export default TestSignature

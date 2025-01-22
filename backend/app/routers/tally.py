@@ -47,6 +47,7 @@ async def tallyBallots():
             result = await session.execute(text("SELECT * FROM shuffled_ballots"))
             items = result.fetchall()
             for item in items:
+                print("\nshuffled item\n\n", item)
                 encBallots.append(ElgamalCipherText().setCipher(ast.literal_eval(item.candidate)))
         for item in encBallots:
             print(item)
@@ -61,7 +62,7 @@ async def tallyBallots():
             else:
                 result[item] = 1
         print(result)
-        return {"reuslt": result, "decBallots": decBallots}
+        return {"result": result, "decBallots": decBallots}
     except Exception as e:
         traceback.print_exc()
-        return {"reuslt": result, "decBallots": decBallots}
+        return {"result": result, "decBallots": decBallots}

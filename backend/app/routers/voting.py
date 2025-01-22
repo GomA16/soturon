@@ -110,17 +110,20 @@ async def submitBallot(data: candidateChoice):
         params.setParams(json_data["election_vars"]["parameters"])
         keys = ElgamalKeys()
         keys.setKeys(json_data["election_vars"]["authKeys"])
+        tallyKeys = ElgamalKeys()
+        tallyKeys.setKeys(json_data["election_vars"]["tallyKeys"])
         encPIN = ElgamalCipherText()
         encPIN.setCipher(data.pin)
-        pin = encPIN.decryption(params, keys)
+        pin = str(encPIN.decryption(params, keys).plainText)
         print("pin",pin)
 
             
         electralRoll = []
         async with async_session() as session:
             result = await session.execute(text("SELECT * FROM electoral_roll"))
+            items = result.fetchall()
             print("\nresult\n",result.fetchall())
-            for item in result:
+            for item in items:
                 electralRoll.append({
                     "pk":item[1],
                     "PIN":item[2]
@@ -138,12 +141,15 @@ async def submitBallot(data: candidateChoice):
 
         # pinが有効かどうかを確認
         ballot = AllBallots()
+        print("\nballot data\n",{"pk": data.pk, "PIN": pin})
+        print()
         if {"pk": data.pk, "PIN": pin} in electralRoll:
             ballot = AllBallots(revocated="False", pk=f"{data.pk}", pin=str(data.pin), candidate=str(data.candidate))
         else:
+            print("\ncoerced!!\n\n")
             dumy = ElgamalPlainText(1)
             encDumy = ElgamalCipherText()
-            encDumy.encryption(params, keys, dumy)
+            encDumy.encryption(params, tallyKeys, dumy)
             ballot = AllBallots(revocated="False", pk=f"{data.pk}", pin=str(data.pin), candidate=str(encDumy.cipherText))
         
         print("\nballot\n",ballot.pk)
@@ -160,7 +166,7 @@ async def submitBallot(data: candidateChoice):
                 existEncPIN = ElgamalCipherText()
                 existEncPIN.setCipher(ast.literal_eval(item.pin))
                 existPIN = existEncPIN.decryption(params, keys).plainText
-                if (data.pk, pin.plainText) == (existPk, existPIN):
+                if (data.pk, pin) == (existPk, str(existPIN)):
                     await session.execute(
                         text("UPDATE all_ballots SET revocated = :revocated WHERE id = :id"),
                         {"revocated": "True", "id": item.id}
