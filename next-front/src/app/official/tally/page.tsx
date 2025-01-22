@@ -26,7 +26,7 @@ const tallyBallots = () => {
         style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <h1>election result</h1>
             <p>{result}</p>
-            <Button onClick={handleClick}></Button>
+            <Button onClick={handleClick}>tally</Button>
         </div>
     )
 }

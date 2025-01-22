@@ -19,6 +19,7 @@ import json
 import os
 import asyncio
 from sqlalchemy import text
+import ast
 
 # 現在のスクリプトのディレクトリを取得
 current_dir = os.path.dirname(__file__)
@@ -40,16 +41,27 @@ router = APIRouter()
 
 @router.get("/tallyBallots")
 async def tallyBallots():
-    encBallots = [ElgamalCipherText().setCipher(item.candidate) for item in mixedBallots]
-    for item in encBallots:
-        print(item)
-    decBallots = [item.decryption(params, keys) for item in encBallots]
-    for item in decBallots:
-        print(item)
-    result = {}
-    for item in decBallots:
-        if item in result.keys:
-            result[item] += 1
-        else:
-            result[item] = 1
-    return {"reuslt": result, "decBallots": decBallots}
+    try:
+        encBallots = []
+        async with async_session() as session:
+            result = await session.execute(text("SELECT * FROM shuffled_ballots"))
+            items = result.fetchall()
+            for item in items:
+                encBallots.append(ElgamalCipherText().setCipher(ast.literal_eval(item.candidate)))
+        for item in encBallots:
+            print(item)
+        decBallots = [item.decryption(params, keys).plainText for item in encBallots]
+        for item in decBallots:
+            print(item)
+        result = {}
+        print(type(decBallots[0]))
+        for item in decBallots:
+            if item in result.keys():
+                result[item] += 1
+            else:
+                result[item] = 1
+        print(result)
+        return {"reuslt": result, "decBallots": decBallots}
+    except Exception as e:
+        traceback.print_exc()
+        return {"reuslt": result, "decBallots": decBallots}

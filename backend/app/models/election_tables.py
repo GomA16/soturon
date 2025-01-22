@@ -36,22 +36,22 @@ class ElectoralRoll(Base):
 class AllBallots(Base):
     __tablename__= "all_ballots"
     id = Column(Integer, primary_key=True, index=True)
-    revocated = Column(String, primary_key=True, index=True)
-    pk = Column(String, nullable=False)
-    pin = Column(String, nullable=False)
-    candidate = Column(String, nullable=False)
+    revocated = Column(String, nullable=False)
+    pk = Column(String(2047), nullable=False)
+    pin = Column(String(2047), nullable=False)
+    candidate = Column(String(2047), nullable=False)
 
 class ShuffleBallots(Base):
     __tablename__="shuffled_ballots"
     id = Column(Integer, primary_key=True, index=True)
-    candidate = Column(String, nullable=False)
+    candidate = Column(String(2047), nullable=False)
 
 class RevocatedBallots(Base):
     __tablename__ = "revocation"
     id = Column(Integer, primary_key=True, index=True)
-    pk = Column(String, nullable=False)
-    pin = Column(String, nullable=False)
-    candidate = Column(String, nullable=False)
+    pk = Column(String(2047), nullable=False)
+    pin = Column(String(2047), nullable=False)
+    candidate = Column(String(2047), nullable=False)
 
 
 class TestTable(Base):

@@ -15,6 +15,7 @@ import base64
 import traceback
 import json
 import os
+import ast
 
 # 現在のスクリプトのディレクトリを取得
 current_dir = os.path.dirname(__file__)
@@ -124,15 +125,52 @@ async def submitBallot(data: candidateChoice):
                     "pk":item[1],
                     "PIN":item[2]
                 })
+        print("electoral roll")
+        print(electralRoll)
             
-        ballot = []
+        existBallots = []
+        async with async_session() as session:
+            result = await session.execute(text("SELECT * FROM all_ballots "))
+            items = result.fetchall()
+            for item in items:
+                existBallots.append(item)
+        print("\nall ballots\n", existBallots)
+
+        # pinが有効かどうかを確認
+        ballot = AllBallots()
         if {"pk": data.pk, "PIN": pin} in electralRoll:
-            ballot = [data.candidate, data.pin, data.pk]
+            ballot = AllBallots(revocated="False", pk=f"{data.pk}", pin=str(data.pin), candidate=str(data.candidate))
         else:
             dumy = ElgamalPlainText(1)
             encDumy = ElgamalCipherText()
             encDumy.encryption(params, keys, dumy)
-            ballot = [encDumy.cipherText, data.pin, data.pk]
+            ballot = AllBallots(revocated="False", pk=f"{data.pk}", pin=str(data.pin), candidate=str(encDumy.cipherText))
+        
+        print("\nballot\n",ballot.pk)
+        print(ballot.pin)
+        print(ballot.candidate)
+        print(ballot.revocated)
+
+        # 重複票の失効
+        async with async_session() as session:
+            result = await session.execute(text("SELECT * FROM all_ballots"))
+            items = result.fetchall()
+            for item in items:
+                existPk = item.pk
+                existEncPIN = ElgamalCipherText()
+                existEncPIN.setCipher(ast.literal_eval(item.pin))
+                existPIN = existEncPIN.decryption(params, keys).plainText
+                if (data.pk, pin.plainText) == (existPk, existPIN):
+                    await session.execute(
+                        text("UPDATE all_ballots SET revocated = :revocated WHERE id = :id"),
+                        {"revocated": "True", "id": item.id}
+                    )
+                    await session.commit()
+
+        # ballotの追加
+        async with async_session() as session:
+            async with session.begin():
+                session.add(ballot)
             
         return {"status": "success"}
     except Exception as e:

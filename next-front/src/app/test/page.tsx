@@ -1,4 +1,4 @@
-// "use client"
+"use client"
 
 import { BACKEND_URL } from "@/src/config/constants";
 import { createSign, createVerify, generateKeyPairSync, getCurves } from "crypto";
@@ -7,6 +7,7 @@ import testdata from "@/data/testdata.json";
 import bigInt from "big-integer";
 import { getPrimitiveRoot, getPrimeFactors, getRandomBigInt, modInverse, modPow } from "../tools/myPrimitives/numTheory";
 import { ElgamalCipherText, ElgamalKeys, ElgamalPlainText, Parameters, stringToBigInt } from "../tools/myPrimitives/elgamal";
+import { useEffect } from "react";
 
 const TestElg = () => {
     let vars = electionData.election_vars
@@ -121,4 +122,29 @@ const TestSignature = () => {
     );
 }
 
-export default TestSignature
+const TestMix = () => {
+    const mix = async () => {
+        await fetch(BACKEND_URL + "/mix/mixBallots"); 
+    };
+
+    useEffect(() => {
+        mix();
+    },[]);
+    return(
+        <div>test page</div>
+    )
+}
+
+const TestTally = () => {
+    const tally = async () => {
+        await fetch(BACKEND_URL+ "/tally/tallyBallots");
+    };
+    useEffect(()=>{
+        tally();
+    },[]);
+    return(
+        <div>test tally</div>
+    )
+}
+
+export default TestTally

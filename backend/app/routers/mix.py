@@ -20,6 +20,7 @@ import traceback
 import json
 import os
 import asyncio
+import ast
 from sqlalchemy import text
 
 # 現在のスクリプトのディレクトリを取得
@@ -38,14 +39,25 @@ router = APIRouter()
 
 @router.get("/mixBallots")
 async def mixBallots():
-    ballots = sharedResource.ballots
-    revocationList = sharedResource.revocationList
-    plainBallots = [item for item in ballots if item not in revocationList]
+    ballots = []
+    async with async_session() as session:
+        result = await session.execute(text("SELECT * FROM all_ballots"))
+        items = result.fetchall()
+        for item in items:
+            if item.revocated == "False":
+                ballots.append(ast.literal_eval(item.candidate))
+    print("ballots\n",ballots)
     phai1 = Permutation()
     phai2 = Permutation()
-    phai1.genPermutation(len(plainBallots))
-    phai2.genPermutation(len(plainBallots))
-    firstMixedBallots = phai1.doPermutation(plainBallots)
+    phai1.genPermutation(len(ballots))
+    phai2.genPermutation(len(ballots))
+    firstMixedBallots = phai1.doPermutation(ballots)
+    print(firstMixedBallots)
     secondMixedBallots = phai2.doPermutation(firstMixedBallots)
-    sharedResource.setMixedBallots(secondMixedBallots)
+    async with async_session() as session:
+        async with session.begin():
+            for item in secondMixedBallots:
+                # print(type(item))
+                ballot = ShuffleBallots(candidate=str(item))
+                session.add(ballot)
     return {"mixResult": secondMixedBallots}

@@ -21,7 +21,7 @@ class Permutation():
         for i in range(n):
             self.matrix[i][res[i]] = 1
 
-    def doPermutation(self, data: list[int]) -> list[int]:
+    def doPermutation(self, data: list) -> list:
         res= [0 for _ in range(len(data))]
         for i in range(len(data)):
             res[i] = data[self.permutation[i]]
