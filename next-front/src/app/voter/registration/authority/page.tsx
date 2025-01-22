@@ -1,18 +1,19 @@
 "use client";
 
-import React, { useEffect, useState} from "react";
+import React, { useState} from "react";
 import { BACKEND_URL } from "@/src/config/constants";
-import { Button } from "@/components/ui/button";
 import electionData from "@/data/electionData.json";
-import  Link  from "next/link";
+import { useRouter } from "next/navigation";
+import QRScanner from "@/src/app/components/QRScanner";
 
 const checkAuthority = () => {
+    const router = useRouter();
     const [status, setStatus] = useState("loading...");
+    const [signKey, setSignKeys] = useState<any>();
     let voterData;
     console.log("voterData", voterData)
     let challenge = 0;
     // いったんjsonからデータを読み出す
-    const keys = electionData.officialKey;
 
     // チャレンジを受け取る
     const getChallenge = async () => {
@@ -34,7 +35,6 @@ const checkAuthority = () => {
     }
     // 署名の生成
     let signature: string = "";
-    const signKey = keys.signKey;
     const message: string = Buffer.from(JSON.stringify(dataToSign)).toString("base64");
     const genSignature = async () => {
         const response = await fetch('http://localhost:3000/api/sign', {
@@ -69,31 +69,44 @@ const checkAuthority = () => {
 
             if(data.status == "success") {
                 setStatus("success!!");
+                router.push("/voter/registration/pin");
                 console.log("success!!");
             }
         }catch (error) {
             console.log("response error", error);
         }
     };
-    const handleProcess = async () => {
+    const handleProcess = async (data: string) => {
+        voterData = sessionStorage.getItem("voterData");
+        const json_data =JSON.parse(data);
+        setSignKeys(json_data.signKey);
+        setScannedData(data);
         await getChallenge();
         await genSignature();
         await sendResponse();
         sessionStorage.setItem("officialKeys", JSON.stringify(electionData.officialKey));
     };
+    const [scannedData, setScannedData] = useState<string>("No result yet");
 
-    useEffect(() => {
-        voterData = sessionStorage.getItem("voterData");
-        handleProcess()}, []);
+    const handleDecode = async(data: string) => {
+        console.log("QR Code:", typeof(data), "\n",data);
+        handleProcess(data);
+    };
 
+
+    // useEffect(() => {
+    //     voterData = sessionStorage.getItem("voterData");
+    //     handleProcess()}, []);
+    
     return (
         <div className="h-screen flex justify-center items-center"
         style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <h1>Read Officials Code</h1>
+            <h1>Read Officials QR ode</h1>
+            {/* QRScannerコンポーネントを呼び出し */}
+            <QRScanner onDecode={handleDecode} />
+            {/* スキャンしたデータを表示 */}
+            <p>Scanned Data: {scannedData}</p>
             <p>{status}</p>
-            <Button>
-                <Link href = "/voter/registration/pin">next</Link>
-            </Button>
         </div>
     )
 };

@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input"
 import { ElgamalCipherText, ElgamalKeys, ElgamalPlainText, Parameters } from "@/src/app/tools/myPrimitives/elgamal";
 import bigInt from "big-integer";
 import { useRouter } from "next/navigation";
+import QRScanner from "@/src/app/components/QRScanner";
 
 
 

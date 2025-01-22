@@ -1,19 +1,21 @@
 "use client";
 import QrScanner from 'qr-scanner';
-import { type FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
+
 type Props = {
   onDecode?: (result: string) => void;
   loading?: React.ReactNode;
 };
+
 const QRScanner: FC<Props> = ({
   onDecode = (result) => console.log("Scanned QR Code Content:", result),
-  loading,
+  loading = <p>Loading camera...</p>,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
   const [isBooting, setIsBooting] = useState(true);
+
   useEffect(() => {
-    // QRスキャナーのインスタンス作成
     if (videoRef.current) {
       qrScannerRef.current = new QrScanner(
         videoRef.current,
@@ -26,23 +28,21 @@ const QRScanner: FC<Props> = ({
           highlightCodeOutline: true,
         },
       );
-      // スキャン開始
       qrScannerRef.current.start().then(() => {
-        setIsBooting(false);
+        setIsBooting(false); //
       });
     }
-    // クリーンアップ関数
     return () => {
       if (qrScannerRef.current) {
-        qrScannerRef.current.destroy();
+        qrScannerRef.current.destroy(); 
       }
     };
   }, [onDecode]);
+
   return (
     <>
       {isBooting && loading}
-      {/* biome-ignore lint/a11y/useMediaCaption: QRスキャナーなので、キャプションは不要 */}
-      <video ref={videoRef} />
+      <video ref={videoRef} style={{ width: '100%', maxHeight: '50vh' }} />
     </>
   );
 };

@@ -4,128 +4,72 @@
 
 "use client";
 
-import React, { useEffect, useState} from "react";
+import React, { useState } from "react";
 // import { BACKEND_URL } from "@/src/config/constants";
-import { Button } from "@/components/ui/button";
-import electionData from "@/data/electionData.json";
-import  Link  from "next/link";
 import { genSignature, getChallenge, sendResponse } from "@/src/app/components/authentication";
-import { BACKEND_URL } from "@/src/config/constants";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
+import { useRouter } from "next/navigation";
 // import { useZxing } from "react-zxing";
+import QRScanner from "@/src/app/components/QRScanner";
 
 const RegistraionTop = () => {
-    const formSchema = z.object({
-        id: z.string().min(1, {
-        message: "id must be at least 2 characters.",
-      }),
-    })
+    const  router = useRouter();
     const [status, setStatus] = useState("loading...");
-    // 1. Define your form.
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-          id: "",
-        },
-      })
     const saveData = (voterData: any):boolean => {
         sessionStorage.setItem("voterData", JSON.stringify({voterData}));
         return true
     };
 
-    const onSubmit = async (values: z.infer<typeof formSchema>) => {
-        
-        // いったんjsonからデータを読み出す
-        const voterList = electionData.voterInfoList;
-        const voter = voterList[Number(values.id)];
-        console.log("voter", voter);
-    
-        // 署名の生成
-        const signKey = voter.signKey;
-    
-        // レスポンス生成
-        const challenge = await getChallenge();
-        if (!challenge) {
-            console.log("Failed to get challenge");
-            return;
-        }
+    const [scannedData, setScannedData] = useState<string>("No result yet");
 
-        const message: string = Buffer.from(challenge.toString()).toString("base64");
-        const signature = await genSignature(message, signKey);
-        if (!signature) {
-            console.log("Failed to generate signature");
-            return;
-        }
-        const voterData = {
-            "name":voter.name,
-            "Age":voter.Age,
-            "Gender":voter.Gender,
-            "challenge": message,
-            "signature": signature
-        };
-        const isSuccess = await sendResponse(voterData,"/registration/verifyVoter");
-        if (isSuccess) {
-            setStatus("Success!");
-            console.log("Voter registration successful!");
-        } else {
-            setStatus("Failed");
-            console.log("Voter registration failed.");
-        }
-        saveData(voterData);
+    const handleDecode = async(data: string) => {
+      setScannedData(data);
+      const voter = JSON.parse(data);
+    
+      // 署名の生成
+      const signKey = voter.signKey;
+  
+      // レスポンス生成
+      const challenge = await getChallenge();
+      if (!challenge) {
+          console.log("Failed to get challenge");
+          return;
+      }
+
+      const message: string = Buffer.from(challenge.toString()).toString("base64");
+      const signature = await genSignature(message, signKey);
+      if (!signature) {
+          console.log("Failed to generate signature");
+          return;
+      }
+      const voterData = {
+          "name":voter.name,
+          "Age":voter.Age,
+          "Gender":voter.Gender,
+          "challenge": message,
+          "signature": signature
+      };
+      const isSuccess = await sendResponse(voterData,"/registration/verifyVoter");
+      if (isSuccess) {
+          setStatus("Success!");
+          console.log("Voter registration successful!");
+          router.push("/voter/registration/authority")
+      } else {
+          setStatus("Failed");
+          console.log("Voter registration failed.");
+      }
+      saveData(voterData);
+      console.log("QR Code:", typeof(data), "\n",data);
     };
-
-    // useEffect(() => {handleProcess()}, []);
-
-    // const [result, setResult] = useState<string>("");
-    // const { ref } = useZxing({
-    //   onDecodeResult(result) {
-    //     setResult(result.getText());
-    //   },
-    // });
 
     return(
         <div className="h-screen flex justify-center items-center"
         style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <h1> Input your information</h1>
             <p>{status}</p>
-
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <FormField
-                    control={form.control}
-                    name="id"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>id</FormLabel>
-                        <FormControl>
-                        <Input placeholder="input your id" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <Button type="submit">Submit</Button>
-                </form>
-            </Form>
-            <Button>
-            <Link href="/voter/registration/authority">next page</Link>
-            </Button>
-            {/* <video ref={ref} />
-            <p>
-                <span>Last result:</span>
-                <span>{result}</span>
-            </p> */}
+            <h1>Scan your QRコード</h1>
+            {/* QRScannerコンポーネントを呼び出し */}
+            <QRScanner onDecode={handleDecode} />
+            {/* スキャンしたデータを表示 */}
+            <p>Scanned Data: {scannedData}</p>
         </div>
     )
 }
