@@ -8,9 +8,9 @@ import QRScanner from "@/src/app/components/QRScanner";
 
 const VotingTop = () => {
     const router = useRouter();
-    const [status, setStatus] = useState("loading...");
+    const [status, setStatus] = useState<string>("loading...");
 
-    const saveData = (voterData: any):boolean => {
+    const saveData = (voterData: unknown):boolean => {
         sessionStorage.setItem("voterData", JSON.stringify({voterData}));
         return true
     };

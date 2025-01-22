@@ -6,10 +6,10 @@ import electionData from "@/data/electionData.json";
 import { useRouter } from "next/navigation";
 import QRScanner from "@/src/app/components/QRScanner";
 
-const checkAuthority = () => {
+const CheckAuthority = () => {
     const router = useRouter();
-    const [status, setStatus] = useState("loading...");
-    const [signKey, setSignKeys] = useState<any>();
+    const [status, setStatus] = useState<string>("loading...");
+    const [signKey, setSignKeys] = useState<unknown>();
     let voterData;
     console.log("voterData", voterData)
     let challenge = 0;
@@ -111,4 +111,4 @@ const checkAuthority = () => {
     )
 };
 
-export default checkAuthority;
+export default CheckAuthority;

@@ -4,10 +4,9 @@
 import { Button } from "@/components/ui/button";
 import { BACKEND_URL } from "@/src/config/constants";
 import { useState } from "react"
-import { string } from "zod";
 import electionData from "@/data/electionData.json" ;
 
-const tallyBallots = () => {
+const TallyBallots = () => {
     const[result, setResult] = useState<Candidate[]>([]);
     interface Candidate {
         id: string;
@@ -22,7 +21,7 @@ const tallyBallots = () => {
             }
             const data = await response.json();
             const candidateList = electionData.candidateList;
-            let electionResult: Candidate[] = []; // 候補者のリスト
+            const electionResult: Candidate[] = []; // 候補者のリスト
             candidateList.map(item => {
                 const cand: Candidate = {id: item.index, name: item.name, votes: "0"};
                 electionResult.push(cand)
@@ -64,4 +63,4 @@ const tallyBallots = () => {
     )
 }
 
-export default tallyBallots
+export default TallyBallots

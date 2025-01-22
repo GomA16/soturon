@@ -20,10 +20,17 @@ import electionData from "@/data/electionData.json"
 import bigInt from "big-integer"
 import { useRouter } from "next/navigation"
 
-const selectCandidate = () => {
+interface Candidate {
+  index: string;
+  name: string;
+  party: string;
+  district: string;
+};
+
+const SelectCandidate = () => {
   const router = useRouter();
-  const [radioOptions, setRadioOptions] = useState<any[]>([]);  // APIから取得したラジオボタンの選択肢を格納する状態
-  const [schemaValue, setSchemaValue] = useState<String[]>([]);
+  const [radioOptions, setRadioOptions] = useState<Candidate[]>([]);  // APIから取得したラジオボタンの選択肢を格納する状態
+  const [schemaValue, setSchemaValue] = useState<string[]>([]);
     // フォームのスキーマ
     const FormSchema = z.object({
         type: z.string().refine(value => {
@@ -35,7 +42,6 @@ const selectCandidate = () => {
     const form = useForm<z.infer<typeof FormSchema>>({
       resolver: zodResolver(FormSchema),
     });
-    
   useEffect(() => {
     // APIを叩いて選択肢を取得
     const fetchOptions = async () => {
@@ -46,7 +52,7 @@ const selectCandidate = () => {
         }
         const data = await response.json();
         console.log(data.candidateList);
-        const values = data.candidateList.map(candidate => candidate.index);
+        const values = data.candidateList.map((candidate:Candidate) => candidate.index);
         setRadioOptions(data.candidateList);  // 取得したデータを状態にセット
         console.log(values)
         setSchemaValue(values);
@@ -57,7 +63,7 @@ const selectCandidate = () => {
     }
 
     fetchOptions();
-  }, []);
+  }, [radioOptions]);
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     const params = new Parameters();
@@ -92,7 +98,7 @@ const selectCandidate = () => {
                     {radioOptions.length === 0 ? (
                       <p>Loading options...</p>
                     ) : (
-                      radioOptions.map((option) => (
+                      radioOptions.map((option: Candidate) => (
                         <FormItem key={option.index} className="flex items-center space-x-3 space-y-0">
                           <FormControl>
                             <RadioGroupItem value={option.index} />
@@ -114,4 +120,4 @@ const selectCandidate = () => {
   )
 }
 
-export default selectCandidate;
+export default SelectCandidate;

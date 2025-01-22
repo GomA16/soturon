@@ -1,6 +1,5 @@
 "use client"
 
-import { BACKEND_URL } from "@/src/config/constants";
 import electionData from "@/data/electionData.json";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -51,11 +50,15 @@ const PINpage = () => {
         const pin = new ElgamalPlainText(bigInt(values.PIN));
         const encPIN = new ElgamalCipherText();
         encPIN.encryption(params,keys,pin);
-        const ciphers = {
-            c1: encPIN.ctxt[0].toString(), 
-            c2: encPIN.ctxt[1].toString()
-        };
-        const encCandidate = JSON.parse(sessionStorage.getItem("encCandidate")).encCandidate;
+        // const ciphers = {
+        //     c1: encPIN.ctxt[0].toString(), 
+        //     c2: encPIN.ctxt[1].toString()
+        // };
+        const storageData = sessionStorage.getItem("encCandidate");
+        let encCandidate;
+        if (typeof(storageData) == "string"){
+          encCandidate = JSON.parse(storageData).encCandidate;
+        }
         const ballot = {
             pk: electionData.voterInfoList[0].verifyKey,
             pin: encPIN.ctxt,
