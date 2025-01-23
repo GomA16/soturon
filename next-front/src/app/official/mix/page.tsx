@@ -1,7 +1,7 @@
 // バックエンドに、mixの命令をgetで飛ばして、結果を得る
 "use client"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "../../../../components/ui/button";
 import { BACKEND_URL } from "@/src/config/constants";
 
 const MixBallots = () => {
