@@ -1,11 +1,10 @@
 // バックエンドに、mixの命令をgetで飛ばして、結果を得る
 "use client"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "../../../../components/ui/button";
 import { BACKEND_URL } from "@/src/config/constants";
-import { useState } from "react"
 
-const mixBallots = () => {
+const MixBallots = () => {
         const handleClick = async () => {
             await fetch(BACKEND_URL + "/mix/mixBallots"); 
         };
@@ -20,4 +19,4 @@ const mixBallots = () => {
     
 }
 
-export default mixBallots
+export default MixBallots

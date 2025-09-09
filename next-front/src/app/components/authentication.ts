@@ -34,7 +34,7 @@ export const genSignature = async (message: string, signKey: string): Promise<st
 };
 
 // レスポンス生成
-export const sendResponse = async (responseData: any, apiPATH: string): Promise<boolean> => {
+export const sendResponse = async (responseData: unknown, apiPATH: string): Promise<boolean> => {
     try{
         const response = await fetch(BACKEND_URL+apiPATH,{
             method: "POST",

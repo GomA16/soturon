@@ -1,10 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import React, {useEffect, useState} from "react";
-
-const BACKEND_URL = "http://localhost:8000";
-
 const checkInfo = () => {
     return(
         <div>

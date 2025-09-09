@@ -1,4 +1,4 @@
-const votingCompletion = () => {
+const VotingCompletion = () => {
     return (
         <div className="h-screen flex justify-center items-center"
         style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -7,4 +7,4 @@ const votingCompletion = () => {
     )
 }
 
-export default votingCompletion
+export default VotingCompletion

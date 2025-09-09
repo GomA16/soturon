@@ -1,4 +1,4 @@
-const completePage = () => {
+const CompletePage = () => {
     return(
         <div className="h-screen flex justify-center items-center"
         style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -7,4 +7,4 @@ const completePage = () => {
     )
 }
 
-export default completePage
+export default CompletePage
