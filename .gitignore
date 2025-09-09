@@ -8,5 +8,6 @@ backend/app/notebooks
 next-front/node_modules
 next-front/.next
 next-front/certs
-./certs
+next-front/data
+certs
 backend/app/data
